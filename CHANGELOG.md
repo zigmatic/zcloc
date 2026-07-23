@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-07-22
+## [1.0.0] - 2026-07-23
 
 ### Added
 
@@ -24,3 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive test suite covering all modules
 - Benchmark tool for measuring counting throughput
 - README, ARCHITECTURE, and CHANGELOG documentation
+
+## [1.0.1] - 2026-07-23
+
+### Added
+
+- Add TSX, JSX, MDX languages to definitions.zig
+- Increase max file size from 8MB to 100MB in reader.zig
+- Fix counter to handle inline block comments mid-line
+- Add more missing extensions (json5, less, etc.)

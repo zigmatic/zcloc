@@ -28,6 +28,9 @@ pub const LanguageDefinition = struct {
     nested_block_comment_start: []const u8 = "",
     /// Doc comment prefix (counted as comment, not code). May be empty.
     doc_line_comment: []const u8 = "",
+    /// String delimiters to skip over (prevents false comment detection
+    /// inside strings). Default is double and single quotes.
+    string_delimiters: []const []const u8 = &.{ "\"\"", "''" },
 };
 
 /// The master list of all supported languages.
@@ -40,6 +43,7 @@ pub const all_languages = [_]LanguageDefinition{
         .block_comment_start = "/*",
         .block_comment_end = "*/",
         .doc_line_comment = "///",
+        .string_delimiters = &.{ "\"\"", "''" },
     },
     .{
         .name = "C",
@@ -72,7 +76,7 @@ pub const all_languages = [_]LanguageDefinition{
     },
     .{
         .name = "Python",
-        .extensions = &.{ "py", "pyi" },
+        .extensions = &.{ "py", "pyi", "pyw" },
         .line_comment = "#",
         .block_comment_start = "\"\"\"",
         .block_comment_end = "\"\"\"",
@@ -85,8 +89,22 @@ pub const all_languages = [_]LanguageDefinition{
         .block_comment_end = "*/",
     },
     .{
+        .name = "JSX",
+        .extensions = &.{ "jsx" },
+        .line_comment = "//",
+        .block_comment_start = "/*",
+        .block_comment_end = "*/",
+    },
+    .{
         .name = "TypeScript",
         .extensions = &.{ "ts", "mts", "cts" },
+        .line_comment = "//",
+        .block_comment_start = "/*",
+        .block_comment_end = "*/",
+    },
+    .{
+        .name = "TSX",
+        .extensions = &.{ "tsx" },
         .line_comment = "//",
         .block_comment_start = "/*",
         .block_comment_end = "*/",
@@ -107,7 +125,7 @@ pub const all_languages = [_]LanguageDefinition{
     },
     .{
         .name = "Shell",
-        .extensions = &.{ "sh", "bash" },
+        .extensions = &.{ "sh", "bash", "zsh" },
         .filenames = &.{ ".bashrc", ".zshrc" },
         .line_comment = "#",
     },
@@ -329,7 +347,7 @@ pub const all_languages = [_]LanguageDefinition{
     },
     .{
         .name = "JSON",
-        .extensions = &.{ "json" },
+        .extensions = &.{ "json", "json5", "jsonc" },
     },
     .{
         .name = "Markdown",
@@ -337,8 +355,13 @@ pub const all_languages = [_]LanguageDefinition{
         .line_comment = "",
     },
     .{
+        .name = "MDX",
+        .extensions = &.{ "mdx" },
+        .line_comment = "",
+    },
+    .{
         .name = "HTML",
-        .extensions = &.{ "html", "htm" },
+        .extensions = &.{ "html", "htm", "xhtml" },
         .block_comment_start = "<!--",
         .block_comment_end = "-->",
     },
@@ -356,8 +379,21 @@ pub const all_languages = [_]LanguageDefinition{
         .block_comment_end = "*/",
     },
     .{
+        .name = "Less",
+        .extensions = &.{ "less" },
+        .line_comment = "//",
+        .block_comment_start = "/*",
+        .block_comment_end = "*/",
+    },
+    .{
         .name = "XML",
-        .extensions = &.{ "xml", "svg", "xsd", "xsl" },
+        .extensions = &.{ "xml", "xsd", "xsl", "xslt", "plist", "resx", "svgz" },
+        .block_comment_start = "<!--",
+        .block_comment_end = "-->",
+    },
+    .{
+        .name = "SVG",
+        .extensions = &.{ "svg" },
         .block_comment_start = "<!--",
         .block_comment_end = "-->",
     },
@@ -416,7 +452,7 @@ pub const all_languages = [_]LanguageDefinition{
     },
     .{
         .name = "Text",
-        .extensions = &.{ "txt" },
+        .extensions = &.{ "txt", "text", "log" },
     },
 };
 
@@ -428,4 +464,14 @@ test "all languages have a name" {
     for (all_languages) |lang| {
         try std.testing.expect(lang.name.len > 0);
     }
+}
+
+test "tsx is detected" {
+    for (all_languages) |lang| {
+        if (std.mem.eql(u8, lang.name, "TSX")) {
+            try std.testing.expect(std.mem.eql(u8, lang.extensions[0], "tsx"));
+            return;
+        }
+    }
+    try std.testing.expect(false);
 }

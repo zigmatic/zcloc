@@ -13,8 +13,8 @@ const std = @import("std");
 const counter = @import("counter.zig");
 const reg = @import("../languages/registry.zig");
 
-/// Default maximum file size to read (8 MiB).
-pub const default_max_size: usize = 8 * 1024 * 1024;
+/// Default maximum file size to read (100 MiB).
+pub const default_max_size: usize = 100 * 1024 * 1024;
 
 /// Reads and counts a single file.
 /// Returns the line counts, or an error if the file cannot be read.
