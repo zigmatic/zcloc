@@ -2,7 +2,9 @@
 
 A modern, fast, `cloc`-compatible code counter written in Zig.
 
-`zcloc` counts blank lines, comment lines, and code lines across many programming languages. It is designed as a drop-in replacement for [`cloc`](https://github.com/AlDanial/cloc) with significant performance improvements and extended features.
+`zcloc` counts code lines across many programming languages. It is designed as a drop-in replacement for [`cloc`](https://github.com/AlDanial/cloc) with significant performance improvements and extended features.
+
+<img src="docs/assets/screenshot.png" alt="Alt text" width="500"/>
 
 ## Installation
 
