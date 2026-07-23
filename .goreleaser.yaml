@@ -8,6 +8,8 @@
 
 version: 2
 
+project_name: zcloc
+
 builds:
   - builder: zig
     binary: zcloc
