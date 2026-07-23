@@ -9,7 +9,7 @@ A modern, fast, `cloc`-compatible code counter written in Zig.
 ### From source
 
 ```bash
-git clone https://github.com/zcloc/zcloc.git
+git clone https://github.com/zigmatic/zcloc.git
 cd zcloc
 zig build -Doptimize=ReleaseFast
 ```
