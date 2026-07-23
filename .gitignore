@@ -1,0 +1,24 @@
+# Zig build system
+.zig-cache/
+zig-out/
+
+# Potential build artifacts
+*.o
+*.obj
+*.pdb
+*.a
+*.lib
+
+# OS/IDE noise
+.DS_Store
+.vscode/
+.idea/
+.vs/
+*.swp
+*.log
+
+local/
+
+# Added by goreleaser init:
+dist/
+.intentionally-empty-file.o

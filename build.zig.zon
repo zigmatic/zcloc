@@ -1,0 +1,16 @@
+.{
+    .name = .zcloc,
+    .version = "1.0.0",
+    .fingerprint = 0x2bc02250ed9ceb3d,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "README.md",
+        "ARCHITECTURE.md",
+        "CHANGELOG.md",
+        "LICENSE",
+    },
+}
