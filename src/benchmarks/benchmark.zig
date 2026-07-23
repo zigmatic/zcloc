@@ -5,8 +5,8 @@
 //! Generates a large synthetic file and measures counting throughput.
 
 const std = @import("std");
-const counter = @import("counter/counter.zig");
-const reg = @import("languages/registry.zig");
+const counter = @import("zcloc").counter;
+const reg = @import("zcloc").registry;
 
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
@@ -24,12 +24,11 @@ pub fn main(init: std.process.Init) !void {
         const content = try generateFile(allocator, size);
         defer allocator.free(content);
 
-        var timer = try std.time.Timer.start();
-
+        const start_ns = clockNano();
         const counts = counter.count(content, lang);
-        const elapsed_ns = timer.read();
-
+        const elapsed_ns = clockNano() - start_ns;
         const elapsed_ms = @as(f64, @floatFromInt(elapsed_ns)) / 1_000_000.0;
+
         const mb = @as(f64, @floatFromInt(content.len)) / (1024.0 * 1024.0);
         const throughput = if (elapsed_ns > 0)
             mb / (elapsed_ms / 1000.0)
@@ -65,4 +64,10 @@ fn generateFile(allocator: std.mem.Allocator, lines: usize) ![]u8 {
     }
 
     return try buf.toOwnedSlice(allocator);
+}
+
+fn clockNano() i64 {
+    var ts: extern struct { sec: i64, nsec: i64 } = .{ .sec = 0, .nsec = 0 };
+    _ = std.os.linux.syscall2(.clock_gettime, 1, @intFromPtr(&ts));
+    return ts.sec * 1_000_000_000 + ts.nsec;
 }
