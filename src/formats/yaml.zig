@@ -1,6 +1,7 @@
 //! YAML output formatter.
 //!
 //! Produces a simple YAML structure with per-language and summary results.
+//! With `--percent`, each entry includes pct_code, pct_comment, pct_blank.
 
 const std = @import("std");
 const stats = @import("../counter/statistics.zig");
@@ -14,12 +15,21 @@ pub fn write(writer: anytype, summary: *const stats.Summary) !void {
     try writer.print("  cloc_version: \"{s}\"\n", .{commands.version_string});
     try writer.writeAll("languages:\n");
 
+    const total_code = summary.total_code;
+
     for (summary.by_language) |lang| {
         try writer.print("  {s}:\n", .{lang.language});
         try writer.print("    files: {d}\n", .{lang.files});
         try writer.print("    blank: {d}\n", .{lang.blank});
         try writer.print("    comment: {d}\n", .{lang.comment});
         try writer.print("    code: {d}\n", .{lang.code});
+        if (summary.percent) {
+            const lang_total = lang.code + lang.comment + lang.blank;
+            try writer.print("    pct_code: {d:.1}\n", .{stats.pct(lang.code, lang_total)});
+            try writer.print("    pct_comment: {d:.1}\n", .{stats.pct(lang.comment, lang_total)});
+            try writer.print("    pct_blank: {d:.1}\n", .{stats.pct(lang.blank, lang_total)});
+            try writer.print("    pct_of_total: {d:.1}\n", .{stats.pct(lang.code, total_code)});
+        }
     }
 
     try writer.writeAll("sum:\n");
@@ -27,6 +37,12 @@ pub fn write(writer: anytype, summary: *const stats.Summary) !void {
     try writer.print("  blank: {d}\n", .{summary.total_blank});
     try writer.print("  comment: {d}\n", .{summary.total_comment});
     try writer.print("  code: {d}\n", .{summary.total_code});
+    if (summary.percent) {
+        const total_lines = summary.totalLines();
+        try writer.print("  pct_code: {d:.1}\n", .{stats.pct(summary.total_code, total_lines)});
+        try writer.print("  pct_comment: {d:.1}\n", .{stats.pct(summary.total_comment, total_lines)});
+        try writer.print("  pct_blank: {d:.1}\n", .{stats.pct(summary.total_blank, total_lines)});
+    }
 
     if (summary.by_file) |files| {
         try writer.writeAll("by_file:\n");
@@ -63,4 +79,29 @@ test "write produces YAML" {
     try std.testing.expect(std.mem.indexOf(u8, output, "languages:") != null);
     try std.testing.expect(std.mem.indexOf(u8, output, "Zig:") != null);
     try std.testing.expect(std.mem.indexOf(u8, output, "sum:") != null);
+}
+
+test "write produces YAML with percentages" {
+    var buf: [4096]u8 = undefined;
+    var writer = std.Io.Writer.fixed(&buf);
+
+    const lang_results = [_]stats.LangResult{
+        .{ .language = "Zig", .files = 2, .blank = 5, .comment = 3, .code = 20 },
+    };
+
+    var summary = stats.Summary{
+        .by_language = &lang_results,
+        .total_files = 2,
+        .total_blank = 5,
+        .total_comment = 3,
+        .total_code = 20,
+        .percent = true,
+        .allocator = std.testing.allocator,
+    };
+
+    try write(&writer, &summary);
+
+    const output = writer.buffer[0..writer.end];
+    try std.testing.expect(std.mem.indexOf(u8, output, "pct_code") != null);
+    try std.testing.expect(std.mem.indexOf(u8, output, "pct_of_total") != null);
 }

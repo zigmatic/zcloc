@@ -102,6 +102,7 @@ fn run(
 
     var summary = try builder.build(cfg.options.by_file or cfg.options.by_file_by_lang);
     defer summary.deinit();
+    summary.percent = cfg.options.percent;
 
     switch (cfg.options.format) {
         .table => try table_fmt.write(stdout_writer, &summary),

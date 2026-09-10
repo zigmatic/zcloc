@@ -52,6 +52,8 @@ pub const Options = struct {
     jobs: u32 = 0,
     /// Strict mode: no fallback when git is unavailable.
     strict: bool = false,
+    /// Show percentage breakdown of code/comment/blank.
+    percent: bool = false,
 
     pub fn deinit(self: *Options, allocator: std.mem.Allocator) void {
         for (self.targets) |t| allocator.free(t);
@@ -105,6 +107,8 @@ pub fn parse(allocator: std.mem.Allocator, args: []const []const u8) !Options {
             opts.respect_clocignore = false;
         } else if (eql(arg, "--strict")) {
             opts.strict = true;
+        } else if (eql(arg, "--percent")) {
+            opts.percent = true;
         } else if (startsWith(arg, "--include-lang=")) {
             opts.include_lang = try paths.splitComma(allocator, arg["--include-lang=".len..]);
         } else if (startsWith(arg, "--exclude-lang=")) {
@@ -244,4 +248,11 @@ test "parse tracked flag" {
     var opts = try parse(allocator, &.{"--tracked"});
     defer opts.deinit(allocator);
     try std.testing.expect(opts.tracked);
+}
+
+test "parse percent flag" {
+    const allocator = std.testing.allocator;
+    var opts = try parse(allocator, &.{"--percent"});
+    defer opts.deinit(allocator);
+    try std.testing.expect(opts.percent);
 }

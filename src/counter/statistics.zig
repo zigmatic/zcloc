@@ -31,6 +31,7 @@ pub const Summary = struct {
     total_blank: u64 = 0,
     total_comment: u64 = 0,
     total_code: u64 = 0,
+    percent: bool = false,
     allocator: std.mem.Allocator,
 
     pub fn deinit(self: *Summary) void {
@@ -40,7 +41,18 @@ pub const Summary = struct {
             self.allocator.free(bf);
         }
     }
+
+    /// Returns the total line count (code + comment + blank).
+    pub fn totalLines(self: *const Summary) u64 {
+        return self.total_code + self.total_comment + self.total_blank;
+    }
 };
+
+/// Returns the percentage of `part` relative to `total`, or 0.0 if total is 0.
+pub fn pct(part: u64, total: u64) f64 {
+    if (total == 0) return 0.0;
+    return (@as(f64, @floatFromInt(part)) / @as(f64, @floatFromInt(total))) * 100.0;
+}
 
 /// Builder that accumulates results incrementally.
 pub const StatsBuilder = struct {
@@ -140,6 +152,7 @@ pub const StatsBuilder = struct {
             .total_blank = total_blank,
             .total_comment = total_comment,
             .total_code = total_code,
+            .percent = false,
             .allocator = self.allocator,
         };
     }

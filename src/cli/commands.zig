@@ -22,6 +22,7 @@ pub const help_text =
     \\  --yaml                 Output in YAML format.
     \\  --md                   Output in Markdown format.
     \\  --quiet                Suppress non-essential output.
+    \\  --percent             Show percentage breakdown of code/comment/blank.
     \\  --version              Show version and exit.
     \\  --help                 Show this help and exit.
     \\
