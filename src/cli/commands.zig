@@ -23,6 +23,7 @@ pub const help_text =
     \\  --md                   Output in Markdown format.
     \\  --quiet                Suppress non-essential output.
     \\  --percent             Show percentage breakdown of code/comment/blank.
+    \\  --diff                Compare two directories (requires exactly 2 targets).
     \\  --version              Show version and exit.
     \\  --help                 Show this help and exit.
     \\
@@ -44,6 +45,7 @@ pub const help_text =
     \\  zcloc src --by-file    Per-file results for src/
     \\  zcloc --json --quiet   JSON output, no extra text
     \\  zcloc --tracked        Only git-tracked files
+    \\  zcloc --diff dir1 dir2  Compare line counts between two directories
     \\
 ;
 

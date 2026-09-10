@@ -28,6 +28,7 @@ test {
     _ = @import("counter/counter.zig");
     _ = @import("counter/statistics.zig");
     _ = @import("counter/parallel.zig");
+    _ = @import("counter/diff.zig");
 
     // Formats
     _ = @import("formats/table.zig");
@@ -35,6 +36,7 @@ test {
     _ = @import("formats/yaml.zig");
     _ = @import("formats/csv.zig");
     _ = @import("formats/markdown.zig");
+    _ = @import("formats/diff_table.zig");
 
     // Languages
     _ = @import("languages/definitions.zig");

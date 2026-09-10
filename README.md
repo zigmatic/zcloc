@@ -6,6 +6,7 @@ A modern, fast, `cloc`-compatible code counter written in Zig.
 
 <img src="docs/assets/screenshot.png" alt="Alt text" width="500"/>
 
+
 ## Installation
 
 ### From source
@@ -17,6 +18,16 @@ zig build -Doptimize=ReleaseFast
 ```
 
 The binary is at `zig-out/bin/zcloc`.
+
+### Install script
+
+```bash
+./install.sh              # installs to ~/.local/bin
+./install.sh /usr/local   # installs to /usr/local/bin
+PREFIX=/opt ./install.sh  # installs to /opt/bin
+```
+
+The script auto-downloads Zig 0.16.0 if not already installed, builds the release binary, copies it to the install prefix, and cleans up build artifacts.
 
 ### Requirements
 
@@ -31,6 +42,8 @@ zcloc --by-file          # per-file results
 zcloc --json             # JSON output
 zcloc --include-lang=Zig # only Zig files
 zcloc --tracked          # only git-tracked files
+zcloc --diff dir1 dir2   # compare two directories
+zcloc --percent          # show code/comment/blank percentages
 ```
 
 ## cloc compatibility
@@ -65,6 +78,24 @@ zcloc --tracked
 ```
 
 Automatically detects Git repositories. Falls back to full walk if not in a repo (unless `--strict` is set).
+
+### Diff mode (`--diff`)
+
+Compare line counts between two directories:
+
+```bash
+zcloc --diff old_src new_src
+```
+
+Shows per-language and total added/removed lines and files. Languages with no changes are filtered out.
+
+### Percentage reporting (`--percent`)
+
+Show code, comment, and blank percentages per language and in the total row:
+
+```bash
+zcloc --percent
+```
 
 ### `.gitignore` support
 
