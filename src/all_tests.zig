@@ -27,6 +27,7 @@ test {
     _ = @import("counter/reader.zig");
     _ = @import("counter/counter.zig");
     _ = @import("counter/statistics.zig");
+    _ = @import("counter/parallel.zig");
 
     // Formats
     _ = @import("formats/table.zig");
