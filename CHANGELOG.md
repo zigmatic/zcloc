@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# Sep 10 - v1.0.3
+
+feat: multi-threaded counting with --jobs flag — distributes file counting across worker threads using an atomic job queue, falls back to single-threaded when jobs <= 1
+
+changed/added files:
+
+src/counter/parallel.zig - added, multi-threaded counting with atomic job queue and worker threads
+src/main.zig - changed uses parallel.countFiles for both walked and tracked modes
+
+
 # Aug 18 - v1.0.2
 
 feat: added TSX, JSX, MDX, Less, and SVG language definitions

@@ -16,6 +16,7 @@ const walker = @import("counter/walker.zig");
 const reader = @import("counter/reader.zig");
 const counter = @import("counter/counter.zig");
 const stats = @import("counter/statistics.zig");
+const parallel = @import("counter/parallel.zig");
 const reg = @import("languages/registry.zig");
 const table_fmt = @import("formats/table.zig");
 const json_fmt = @import("formats/json.zig");
@@ -159,10 +160,10 @@ fn countTarget(
             }
             try errors.report(stderr_writer, err, target);
             try stderr_writer.flush();
-            try countWalked(allocator, io, builder, target, walk_config);
+            try countWalked(allocator, io, builder, target, walk_config, options.jobs);
         };
     } else {
-        try countWalked(allocator, io, builder, target, walk_config);
+        try countWalked(allocator, io, builder, target, walk_config, options.jobs);
     }
 }
 
@@ -176,11 +177,18 @@ fn countTracked(
     stderr_writer: *std.Io.Writer,
 ) !void {
     _ = stderr_writer;
+    _ = walk_config;
     const files = try tracked.listTracked(allocator, io, target);
+
+    var entries: std.ArrayList(walker.Entry) = .empty;
+    defer entries.deinit(allocator);
 
     for (files) |rel_path| {
         var path_buf: [std.fs.max_path_bytes]u8 = undefined;
-        const full_path = std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ target, rel_path }) catch continue;
+        const full_path = std.fmt.bufPrint(&path_buf, "{s}/{s}", .{ target, rel_path }) catch {
+            allocator.free(@constCast(rel_path));
+            continue;
+        };
 
         const lang = reg.Registry.detect(rel_path) orelse {
             allocator.free(@constCast(rel_path));
@@ -192,17 +200,23 @@ fn countTracked(
             continue;
         }
 
-        const counts = reader.countFile(allocator, io, full_path, lang, reader.default_max_size) catch |err| {
-            if (err == error.FileTooLarge) continue;
+        const path_copy = allocator.dupe(u8, full_path) catch {
+            allocator.free(@constCast(rel_path));
             continue;
         };
-
-        try builder.addFile(full_path, lang.name, counts.blank, counts.comment, counts.code);
+        entries.append(allocator, .{ .path = path_copy, .language = lang }) catch {
+            allocator.free(path_copy);
+            allocator.free(@constCast(rel_path));
+            continue;
+        };
         allocator.free(@constCast(rel_path));
     }
 
     allocator.free(files);
-    _ = walk_config;
+
+    try parallel.countFiles(allocator, io, entries.items, options.jobs, builder);
+
+    for (entries.items) |e| allocator.free(e.path);
 }
 
 fn countWalked(
@@ -211,6 +225,7 @@ fn countWalked(
     builder: *stats.StatsBuilder,
     target: []const u8,
     walk_config: walker.WalkerConfig,
+    jobs: u32,
 ) !void {
     const entries = try walker.walk(allocator, io, target, walk_config);
     defer {
@@ -218,16 +233,7 @@ fn countWalked(
         allocator.free(entries);
     }
 
-    for (entries) |entry| {
-        const lang = entry.language orelse continue;
-
-        const counts = reader.countFile(allocator, io, entry.path, lang, reader.default_max_size) catch |err| {
-            if (err == error.FileTooLarge) continue;
-            continue;
-        };
-
-        try builder.addFile(entry.path, lang.name, counts.blank, counts.comment, counts.code);
-    }
+    try parallel.countFiles(allocator, io, entries, jobs, builder);
 }
 
 fn shouldIncludeLang(lang_name: []const u8, options: parser.Options) bool {

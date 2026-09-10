@@ -31,7 +31,7 @@ pub const help_text =
     \\  --no-gitignore         Ignore .gitignore files.
     \\  --no-clocignore        Ignore .clocignore files.
     \\  --strict               No fallback when git is unavailable.
-    \\  --jobs=N               Number of worker threads (0 = auto).
+    \\  --jobs=N               Number of worker threads for parallel counting (0 = auto).
     \\
     \\Configuration files (in priority order):
     \\  CLI flags              Highest priority
