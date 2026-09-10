@@ -17,12 +17,14 @@ const reader = @import("counter/reader.zig");
 const counter = @import("counter/counter.zig");
 const stats = @import("counter/statistics.zig");
 const parallel = @import("counter/parallel.zig");
+const diff_mod = @import("counter/diff.zig");
 const reg = @import("languages/registry.zig");
 const table_fmt = @import("formats/table.zig");
 const json_fmt = @import("formats/json.zig");
 const yaml_fmt = @import("formats/yaml.zig");
 const csv_fmt = @import("formats/csv.zig");
 const md_fmt = @import("formats/markdown.zig");
+const diff_fmt = @import("formats/diff_table.zig");
 const errors = @import("util/errors.zig");
 const paths_util = @import("util/paths.zig");
 
@@ -38,7 +40,8 @@ pub fn main(init: std.process.Init) !void {
     var stderr_file_writer: std.Io.File.Writer = .init(.stderr(), io, &stderr_buffer);
     const stderr_writer = &stderr_file_writer.interface;
 
-    const cli_args = try init.minimal.args.toSlice(arena);
+    const all_args = try init.minimal.args.toSlice(arena);
+    const cli_args = if (all_args.len > 0) all_args[1..] else all_args;
 
     run(arena, io, init.environ_map, stdout_writer, stderr_writer, cli_args) catch |err| {
         try errors.report(stderr_writer, err, "fatal error");
@@ -83,6 +86,11 @@ fn run(
     var exclude_exts: []const []const u8 = &.{};
     if (cfg.global_config.exclude_extensions) |exts| {
         exclude_exts = exts;
+    }
+
+    if (cfg.options.diff) {
+        try runDiff(allocator, io, cfg.options, exclude_dirs.items, exclude_exts, stdout_writer, stderr_writer);
+        return;
     }
 
     var builder = stats.StatsBuilder.init(allocator);
@@ -234,6 +242,42 @@ fn countWalked(
     }
 
     try parallel.countFiles(allocator, io, entries, jobs, builder);
+}
+
+fn runDiff(
+    allocator: std.mem.Allocator,
+    io: std.Io,
+    options: parser.Options,
+    exclude_dirs: []const []const u8,
+    exclude_exts: []const []const u8,
+    stdout_writer: *std.Io.Writer,
+    stderr_writer: *std.Io.Writer,
+) !void {
+    if (options.targets.len < 2) {
+        try errors.report(stderr_writer, error.MissingValue, "--diff requires two target directories");
+        try stderr_writer.flush();
+        return error.MissingValue;
+    }
+
+    const dir_a = options.targets[0];
+    const dir_b = options.targets[1];
+
+    var builder_a = stats.StatsBuilder.init(allocator);
+    defer builder_a.deinit();
+    try countTarget(allocator, io, &builder_a, dir_a, options, exclude_dirs, exclude_exts, stderr_writer);
+    var summary_a = try builder_a.build(false);
+    defer summary_a.deinit();
+
+    var builder_b = stats.StatsBuilder.init(allocator);
+    defer builder_b.deinit();
+    try countTarget(allocator, io, &builder_b, dir_b, options, exclude_dirs, exclude_exts, stderr_writer);
+    var summary_b = try builder_b.build(false);
+    defer summary_b.deinit();
+
+    var ds = try diff_mod.computeDiff(allocator, &summary_a, &summary_b);
+    defer ds.deinit();
+
+    try diff_fmt.write(stdout_writer, &ds, dir_a, dir_b);
 }
 
 fn shouldIncludeLang(lang_name: []const u8, options: parser.Options) bool {

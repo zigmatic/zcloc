@@ -54,6 +54,8 @@ pub const Options = struct {
     strict: bool = false,
     /// Show percentage breakdown of code/comment/blank.
     percent: bool = false,
+    /// Diff mode: compare two directories.
+    diff: bool = false,
 
     pub fn deinit(self: *Options, allocator: std.mem.Allocator) void {
         for (self.targets) |t| allocator.free(t);
@@ -109,6 +111,8 @@ pub fn parse(allocator: std.mem.Allocator, args: []const []const u8) !Options {
             opts.strict = true;
         } else if (eql(arg, "--percent")) {
             opts.percent = true;
+        } else if (eql(arg, "--diff")) {
+            opts.diff = true;
         } else if (startsWith(arg, "--include-lang=")) {
             opts.include_lang = try paths.splitComma(allocator, arg["--include-lang=".len..]);
         } else if (startsWith(arg, "--exclude-lang=")) {
